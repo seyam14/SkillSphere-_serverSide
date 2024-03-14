@@ -31,6 +31,12 @@ async function run() {
     // Course
     const CourseCollection = client.db('skillsphereDB').collection('Courses');
    
+    // jwt related api
+    app.post('/jwt', async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+      res.send({ token });
+    })
     
     // middlewares 
     const verifyToken = (req, res, next) => {
@@ -73,13 +79,14 @@ async function run() {
       if (email !== req.decoded.email) {
         return res.status(403).send({ message: 'forbidden access' })
       }
-    
+      
       const query = { email: email };
       const user = await userCollection.findOne(query);
       let admin = false;
       if (user) {
         admin = user?.role === 'admin';
       }
+      console.log(admin);
       res.send({ admin });
     })
 
