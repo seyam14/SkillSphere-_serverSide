@@ -124,6 +124,51 @@ async function run() {
       res.send(result);
     })
 
+    app.get("/user/:email", async (req, res) => {
+      try {
+        const userEmail = req.params.email;
+    
+        // Logic to retrieve a user based on email
+        const user = await userCollection.findOne({ email: userEmail });
+    
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+    
+        res.status(200).json(user);
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal Server Error" });
+      }
+    });
+    
+
+    app.put('/user/update/:email', async (req, res) => {
+      try {
+        const email = req.params.email;
+        const filter = { email: email };
+        const options = { upsert: true };
+        const updatedUser = req.body;
+        console.log(updatedUser);
+        const updates = {
+          $set: {
+            name: updatedUser.name,
+            phoneNumber: updatedUser.phoneNumber,
+            image: updatedUser.image,
+            dateOfBirth: updatedUser.dateOfBirth,
+          },
+        };
+    
+        const result = await userCollection.updateOne(filter, updates, options);
+        console.log(result);
+    
+        res.status(201).json({ message: "User Update successfully" });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal Server Error" });
+      }
+    });
+
 
     // add course
     app.post('/addcourse', async (req, res) => {
