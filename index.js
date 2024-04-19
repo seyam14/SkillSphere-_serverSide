@@ -30,6 +30,8 @@ async function run() {
     const userCollection = client.db('skillsphereDB').collection('user');
     // Course
     const CourseCollection = client.db('skillsphereDB').collection('Courses');
+    // 
+    const sellerCollection = client.db('skillsphereDB').collection('seller');
    
     // jwt related api
     app.post('/jwt', async (req, res) => {
@@ -175,7 +177,7 @@ async function run() {
         const bids = req.body;
         console.log(bids);
         const result = await CourseCollection.insertOne(bids);
-        res.send(result);
+        res.send(result);n
     })
   
     
@@ -230,6 +232,18 @@ async function run() {
           const result = await CourseCollection.deleteOne(query);
           res.send(result);
       })
+      // seller data 
+      app.post('/seller', async (req, res) => {
+        const bids = req.body;
+        console.log(bids);
+        const result = await sellerCollection.insertOne(bids);
+        res.send(result);n
+    })
+    app.get('/seller',  async (req, res) => {
+      const cursor = sellerCollection.find();
+      const seller = await cursor.toArray();
+      res.send(seller);
+  })
 
     // // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
