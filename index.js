@@ -30,9 +30,12 @@ async function run() {
     const userCollection = client.db('skillsphereDB').collection('user');
     // Course
     const CourseCollection = client.db('skillsphereDB').collection('Courses');
-    // 
+    // sell course info
     const sellerCollection = client.db('skillsphereDB').collection('seller');
-   
+   // careerpath
+   const careerPathCollection = client.db('skillsphereDB').collection('careerPath');
+   // add to cart course 
+   const addCartCollection = client.db('skillsphereDB').collection('carts');
     // jwt related api
     app.post('/jwt', async (req, res) => {
       const user = req.body;
@@ -46,6 +49,7 @@ async function run() {
 
       if (!req.headers.authorization) {
         return res.status(401).send({ message: 'unauthorized access' });
+
       }
       const token = req.headers.authorization.split(' ')[1];
       jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
@@ -205,46 +209,35 @@ async function run() {
       const result = await CourseCollection.findOne(query)
       res.send(result)
      })
-    
-        //    updated work here
-        app.put('/addcourse/:id', async(req, res) => {
-          const id = req.params.id;
-          const filter = {_id: new ObjectId(id)}
-          const options = { upsert: true };
-          const UpdateCourse = req.body;
-          const course = {
-            $set: {
-                email: UpdateCourse.email, 
-                jobTitle: UpdateCourse.jobTitle, 
-                DeadLine: UpdateCourse.DeadLine, 
-                category: UpdateCourse.category, 
-              Description : UpdateCourse.Description, 
-              Price: UpdateCourse.Price, 
-            }
-              }
-  
-          const result = await CourseCollection.updateOne(filter,course, options);
-          res.send(result);
-        })
-        // 
-        app.delete('/addcourse/:id', async (req, res) => {
-          const id = req.params.id;
-          const query = { _id: new ObjectId(id) };
-          const result = await CourseCollection.deleteOne(query);
-          res.send(result);
-      })
       // seller data 
       app.post('/seller', async (req, res) => {
         const bids = req.body;
         console.log(bids);
         const result = await sellerCollection.insertOne(bids);
-        res.send(result);n
+        res.send(result);
     })
     app.get('/seller',  async (req, res) => {
       const cursor = sellerCollection.find();
       const seller = await cursor.toArray();
       res.send(seller);
+    })
+  
+    //  career Path
+    app.get('/careerPath',  async (req, res) => {
+      const cursor = careerPathCollection.find();
+      const career = await cursor.toArray();
+      res.send(career);
+   })
+  //  
+    app.post('/carts', async (req, res) => {
+      const cartItem = req.body;
+      console.log(cartItem);
+      const result = await addCartCollection.insertOne(cartItem);
+      res.send(result);
   })
+
+  
+
 
     // // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
@@ -254,12 +247,12 @@ async function run() {
     // await client.close();
   }
 }
-run().catch(console.dir);
+    run().catch(console.dir);
+    
+    app.get('/', (req, res) => {
+        res.send('server is running')
+    })
 
-app.get('/', (req, res) => {
-    res.send('server is running')
-})
-
-app.listen(port, () => {
-    console.log(`server is running on port ${port}`);
-})
+    app.listen(port, () => {
+        console.log(`server is running on port ${port}`);
+    })
