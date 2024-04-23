@@ -236,12 +236,7 @@ async function run() {
       const result = await addCartCollection.insertOne(cartItem);
       res.send(result);
   })
-  // app.get('/carts', async (req, res) => {
-  //   const email = req.query.email;
-  //   const query = { email: email };
-  //   const result = addCartCollection.find(query).toArray();
-  //   res.send(result);
-  // });
+
   app.get('/carts', async (req, res) => {
     try {
         const email = req.query.email;
@@ -253,9 +248,52 @@ async function run() {
         console.error("Error fetching cart data:", error);
         res.status(500).send("Internal Server Error");
     }
+  });
+  // payment intent
+  app.post('/create-payment-intent', async (req, res) => {
+    try {
+        const { Price, courseId } = req.body;
+        const amount = parseInt(Price * 100);
+        const userId = courseId 
+        console.log(courseId ); 
+
+        
+        const lastPayment = paymentHistory.find(payment => {
+            return (
+                payment.userId === userId &&
+                new Date(payment.timestamp).getMonth() === new Date().getMonth()
+            );
+        });
+
+        if (lastPayment) {
+            // User has already made a payment in the current month
+            return res.status(400).send({ error: 'User has already made a payment this month' });
+        }
+
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: amount,
+            currency: 'usd',
+            payment_method_types: ['card']
+        });
+
+        
+        paymentHistory.push({
+            userId: userId,
+            timestamp: new Date().toISOString(),
+            amount: amount
+        });
+
+        res.send({
+            clientSecret: paymentIntent.client_secret
+        });
+    } catch (error) {
+        console.error('Error creating payment intent:', error);
+        res.status(500).send({ error: 'Error creating payment intent' });
+    }
 });
 
 
+  // 
   app.delete('/carts/:id', async (req, res) => {
     const id = req.params.id;
     const query = { _id: new ObjectId(id) }
