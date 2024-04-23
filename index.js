@@ -36,6 +36,7 @@ async function run() {
    const careerPathCollection = client.db('skillsphereDB').collection('careerPath');
    // add to cart course 
    const addCartCollection = client.db('skillsphereDB').collection('carts');
+
     // jwt related api
     app.post('/jwt', async (req, res) => {
       const user = req.body;
@@ -234,6 +235,32 @@ async function run() {
       console.log(cartItem);
       const result = await addCartCollection.insertOne(cartItem);
       res.send(result);
+  })
+  // app.get('/carts', async (req, res) => {
+  //   const email = req.query.email;
+  //   const query = { email: email };
+  //   const result = addCartCollection.find(query).toArray();
+  //   res.send(result);
+  // });
+  app.get('/carts', async (req, res) => {
+    try {
+        const email = req.query.email;
+        const query = { email: email };
+        const result = await addCartCollection.find(query).toArray();
+        res.send(result);
+    } catch (error) {
+        // Handle errors appropriately, for example:
+        console.error("Error fetching cart data:", error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+
+  app.delete('/carts/:id', async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) }
+    const result = await addCartCollection.deleteOne(query);
+    res.send(result);
   })
 
   
