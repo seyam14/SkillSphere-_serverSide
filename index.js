@@ -3,7 +3,7 @@ const app = express();
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config()
-
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const port = process.env.PORT || 5000;
 
 
@@ -36,6 +36,7 @@ async function run() {
    const careerPathCollection = client.db('skillsphereDB').collection('careerPath');
    // add to cart course 
    const addCartCollection = client.db('skillsphereDB').collection('carts');
+   const paymentCollection = client.db("skillsphereDB").collection("payments");
 
     // jwt related api
     app.post('/jwt', async (req, res) => {
@@ -248,58 +249,60 @@ async function run() {
         console.error("Error fetching cart data:", error);
         res.status(500).send("Internal Server Error");
     }
-  });
-  // payment intent
-  app.post('/create-payment-intent', async (req, res) => {
-    try {
-        const { Price, courseId } = req.body;
-        const amount = parseInt(Price * 100);
-        const userId = courseId 
-        console.log(courseId ); 
-
-        
-        const lastPayment = paymentHistory.find(payment => {
-            return (
-                payment.userId === userId &&
-                new Date(payment.timestamp).getMonth() === new Date().getMonth()
-            );
-        });
-
-        if (lastPayment) {
-            // User has already made a payment in the current month
-            return res.status(400).send({ error: 'User has already made a payment this month' });
-        }
-
-        const paymentIntent = await stripe.paymentIntents.create({
-            amount: amount,
-            currency: 'usd',
-            payment_method_types: ['card']
-        });
-
-        
-        paymentHistory.push({
-            userId: userId,
-            timestamp: new Date().toISOString(),
-            amount: amount
-        });
-
-        res.send({
-            clientSecret: paymentIntent.client_secret
-        });
-    } catch (error) {
-        console.error('Error creating payment intent:', error);
-        res.status(500).send({ error: 'Error creating payment intent' });
-    }
-});
-
-
-  // 
+  }); 
   app.delete('/carts/:id', async (req, res) => {
     const id = req.params.id;
     const query = { _id: new ObjectId(id) }
     const result = await addCartCollection.deleteOne(query);
     res.send(result);
   })
+    // payment
+    // payment intent
+   app.post('/create-payment-intent', async (req, res) => {
+    const { price } = req.body;
+    const amount = parseInt(price * 100);
+    console.log(amount, 'amount inside the intent')
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amount,
+      currency: 'usd',
+      payment_method_types: ['card']
+    });
+
+    res.send({
+      clientSecret: paymentIntent.client_secret
+    })
+  });
+
+    app.get('/payments/:email', verifyToken, async (req, res) => {
+      const query = { email: req.params.email }
+      if (req.params.email !== req.decoded.email) {
+        return res.status(403).send({ message: 'forbidden access' });
+      }
+      const result = await paymentCollection.find(query).toArray();
+      res.send(result);
+    })
+
+   
+
+  app.post('/payments', async (req, res) => {
+    const payment = req.body;
+    const paymentResult = await paymentCollection.insertOne(payment);
+
+    //  carefully delete each item from the cart
+    console.log('payment info', payment);
+    const query = {
+      _id: {
+        $in: payment.cartIds.map(id => new ObjectId(id))
+      }
+    };
+
+    const deleteResult = await addCartCollection.deleteMany(query);
+
+    res.send({ paymentResult , deleteResult});
+    
+  })
+
 
   
 
