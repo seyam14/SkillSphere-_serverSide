@@ -158,7 +158,7 @@ async function run() {
         const filter = { email: email };
         const options = { upsert: true };
         const updatedUser = req.body;
-        console.log(updatedUser);
+    
         const updates = {
           $set: {
             name: updatedUser.name,
@@ -169,15 +169,14 @@ async function run() {
         };
     
         const result = await userCollection.updateOne(filter, updates, options);
-        console.log(result);
+        console.log(result );
     
-        res.status(201).json({ message: "User Update successfully" });
+        res.status(201).json({ message: "User updated successfully" });
       } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Internal Server Error" });
       }
     });
-
 
     // add course
     app.post('/addcourse', async (req, res) => {
