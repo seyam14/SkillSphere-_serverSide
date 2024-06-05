@@ -210,12 +210,7 @@ async function run() {
       const result = await CourseCollection.findOne(query)
       res.send(result)
      })
-    //  
-    app.get('/addcourse',  async (req, res) => {
-      const cursor = CourseCollection.find();
-      const result = await cursor.toArray();
-      res.send(result );
-    })
+
 
 
       // seller data 
@@ -244,12 +239,7 @@ async function run() {
       const result = await addCartCollection.insertOne(cartItem);
       res.send(result);
   })
-  // 
-  app.get('/carts',  async (req, res) => {
-    const cursor = addCartCollection.find();
-    const career = await cursor.toArray();
-    res.send(career);
- })
+  
 
   app.get('/carts', async (req, res) => {
     try {
