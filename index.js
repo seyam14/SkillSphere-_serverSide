@@ -210,6 +210,14 @@ async function run() {
       const result = await CourseCollection.findOne(query)
       res.send(result)
      })
+    //  
+    app.get('/addcourse',  async (req, res) => {
+      const cursor = CourseCollection.find();
+      const result = await cursor.toArray();
+      res.send(result );
+    })
+
+
       // seller data 
       app.post('/seller', async (req, res) => {
         const bids = req.body;
