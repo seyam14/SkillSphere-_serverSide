@@ -236,6 +236,12 @@ async function run() {
       const result = await addCartCollection.insertOne(cartItem);
       res.send(result);
   })
+  // 
+  app.get('/carts',  async (req, res) => {
+    const cursor = addCartCollection.find();
+    const career = await cursor.toArray();
+    res.send(career);
+ })
 
   app.get('/carts', async (req, res) => {
     try {
